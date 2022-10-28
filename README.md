@@ -81,13 +81,13 @@ python main.py --group_number 7
 
 **Ground truth**:
 
-<img src="README.assets/gt.png.png" alt="gt.png" style="zoom:33%;" />
+<img src="README.assets/htc2022_ta_full_recon_fbp_seg.png" alt="gt.png" style="zoom:33%;" />
 
 **Results**:
 
 | Opening angle |                              BP                              |                             Ours                             |
 | :-----------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|      30°      | <img src="README.assets/BP.png.png" alt="BP.png" style="zoom:33%;" /> | <img src="README.assets/deblur_ccsocr_ddpm_ta_30.png" alt="ours.png" style="zoom:33%;" /> |
+|      30°      | <img src="README.assets/image-20221026193249277.png" alt="BP.png" style="zoom:33%;" /> | <img src="README.assets/deblur_ccsocr_ddpm_ta_30.png" alt="ours.png" style="zoom:33%;" /> |
 
 
 
