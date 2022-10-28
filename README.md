@@ -1,5 +1,5 @@
 
-# BP-Deblur-Fine tuning for HTC 2022
+# BP-Fine tuning for HTC 2022
 <font size=3> Wang Jianyu<sup>1</sup>, Wang Rongqian<sup>1</sup>, Liu Xintong<sup>1</sup>, Lin Guochang<sup>1</sup>, Chen Fukai<sup>1</sup>, Cai Lide<sup>2</sup> </font>
 
 <font size=2><sup>1</sup> Yau Mathematical Science Center, Tsinghua University, Beijing, China</font>
@@ -16,7 +16,6 @@ The [Helsinki Tomography Challenge 2022(HTC 2022)](https://www.fips.fi/HTC2022.p
 ## Algorithm Introduction
 Concerning the above challenges, we propose an algorithm which is a combination of back-projection(BP) method and image deblurring network. To meet the requirements of the competition, the proposed algorithm consists of the following steps:
 - **BP**: The measured limited-angle sinogram is first processed by the BP method. In this part, the implement of the BP method is based on astra package.
-- **Deblur**: The reconstruction of the BP method is then passed to a deblurring network to recover the details of the phantom. The code of this network is based on *[Deep Residual Fourier Transformation for Single Image Deblurring](https://github.com/INVOKERer/DeepRFT)*. We modify and train the network to improve the quality of the reconstruction.
 - **Fine-tuning**: The reconstuction is fine tuned by a generative model based on *[Denoising Diffusion Probabilistic Models](https://github.com/INVOKERer/DeepRFT)*. 
 - **Super-resolution**: Our networks are trained with the size of 128\*128. We use super-resolution to upsample the results to 512\*512. The network is based on *[Residual Dense Network for Image Super-Resolution](https://github.com/yulunzhang/RDN)*.
 - **Thresholding**: The result is obtained by applying a threshold to the high-resolution image.    
@@ -74,7 +73,7 @@ python main.py
 
 | Limited angle |                              BP                              |                             Ours                             |
 | :-----------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|      30°      | ![image-20221026193249277](README.assets/image-20221026214000039.png) | <img src="README.assets/deblur_ddpm_ta_30.png" alt="image-20221026214114972" style="zoom: 25%;" /> |
+|      90°      | ![image-20221026193249277](README.assets/image-20221026214000039.png) | <img src="README.assets/ddpm_ta_90.png" alt="image-20221026214114972" style="zoom: 25%;" /> |
 
 
 
