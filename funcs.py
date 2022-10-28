@@ -5,11 +5,15 @@ from scipy import io
 import astra
 import torch
 from torch.autograd import Variable
-from torch.nn import functional as F
 import pylab
 from skimage.transform import resize, rotate
 from skimage.morphology import closing
+from torch.nn import functional as F
+import matlab
+import matlab.engine
+
 from ddpm import UNet
+from model import DeepRFT as myNet
 import sr
 
 
@@ -54,14 +58,43 @@ def BP_reconstruction(Input_signal, angles, result_size=512, \
 
     return Bp
 
-def extract(v, t, x_shape):
-    """
-    Extract some coefficients at specified timesteps, then reshape to
-    [batch_size, 1, 1, 1, 1, ...] for broadcasting purposes.
-    """
-    out = torch.gather(v, index=t, dim=0).float()
-    return out.view([t.shape[0]] + [1] * (len(x_shape) - 1))
+
+def Deep_Deblur(Input_albedo, group_number, device,img_resolution=128):
+    '''
+    Use network to enhance the result of back projection.
+    Inputs:
+        Input_albedo: result of the back projection method
+        group_number: number of limited-angle tomography difficulty group
+        img_resolution: resolution of input and output(if changed, the network should be retrained)
+    Output:
+        output: deblur result 
+    '''
     
+    ##Define the network and load pretrained weights to gpu
+    net = myNet()
+    try:
+        net.load_state_dict(torch.load('./pre-trained weights/level_%s.pkl'%(group_number)))
+    except:
+        net=torch.nn.DataParallel(net)
+        net.load_state_dict(torch.load('./pre-trained weights/level_%s.pkl'%(group_number)))
+    
+    net = net.to(device)
+
+    ##Normalization
+    Input_albedo=Input_albedo/np.max(Input_albedo)
+    
+    ##Deblur
+    with torch.no_grad():
+        albedo = Variable(torch.from_numpy(Input_albedo)).reshape(1,1,img_resolution,img_resolution)
+        albedo = albedo.to(device).type(torch.cuda.FloatTensor)
+
+        output = net(albedo)
+        output = output.data.cpu().numpy()
+        output = output.reshape(1,1,img_resolution,img_resolution)
+        output=np.squeeze(output/np.max(output))
+    
+    return output
+
 def DDPM(xt, device, img_size=128):
     '''
     Use network to enhance the result of deblur.
@@ -83,12 +116,6 @@ def DDPM(xt, device, img_size=128):
     
     model = model.to(device)
 
-    ##Normalization
-    xt=xt/np.max(xt)
-    xt[xt<0.8] = 0
-    #xt[xt>0.8] = 1
-    xt = xt[::4,::4]
-    
     lambd = np.linspace(0.001,0.2,1000)
     
     x_T = torch.randn((1, 1, img_size, img_size)).to(device)
@@ -124,7 +151,7 @@ def DDPM(xt, device, img_size=128):
             noise = 0
         x_t = mean.cpu() + torch.exp(0.5 * log_var).cpu() * noise
     
-        x_t = x_t.reshape((img_size, img_size))
+        x_t = x_t.reshape((1, img_size, img_size))
         x_t = x_t.cpu().numpy()
     
         x_t = (1-lambd[time_step]) * x_t + lambd[time_step] * xt
@@ -136,6 +163,8 @@ def DDPM(xt, device, img_size=128):
     x_t[x_t>0.5] = 1
     
     return x_t.cpu().numpy()
+
+
 
 def Load_process(data_path,output_path,group_number):
     '''
@@ -178,21 +207,36 @@ def Load_process(data_path,output_path,group_number):
     ##back projection
     BP=BP_reconstruction(sinogram,angles,result_size=output_size, det_width=det_width, det_count=det_count, source_origin=source_origin, origin_det=origin_det, eff_pixelsize=eff_pixel_size)
 
-    ##ddpm
-    ddpm=DDPM(BP,device)
+    
+
+    ##deblur
+    BP=resize(BP,output_shape=(deblur_size, deblur_size))
+    result=Deep_Deblur(BP,group_number,device)
+    ##clear gpu memory
+    torch.cuda.empty_cache()
     ##super resolution
-    SR=sr.super_resolution(ddpm,device)
+    SR=sr.super_resolution(result,device)
 
     ##totate the reconstruction to original orientation
     SR=rotate(SR,angle_min,order=0)    
 
-    ##save results
-    pylab.gray()
+    
     #pylab.imsave('BP.png',BP)
     #pylab.imsave('Deblur.png',result)
-    pylab.imsave(output_path,SR)
+    
+    ##to matlab solver
+    io.savemat('./temp/tmp_result.mat',{'u_hat':SR,'CtDataLimited':data},do_compression=True)
+    eng=matlab.engine.start_matlab()
+    eng.solver(nargout=0)
+    final=io.loadmat('./temp/final_result.mat')['u']
 
-    #io.savemat('result.mat',{'albedo':SR})
+    ##ddpm
+    ddpm=DDPM(final[::4,::4],device)
+    ##super resolution
+    SR=sr.super_resolution(ddpm,device)
+    ##save results
+    pylab.gray()
+    pylab.imsave(output_path,SR)
     return 
 
 def find_mat(data_list):

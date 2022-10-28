@@ -133,6 +133,6 @@ def super_resolution(data,device):
         Y_hat = Y_hat.data.cpu().numpy()
         Y_hat = Y_hat.reshape(512,512)
         Y_hat[Y_hat<0.5] = 0
-        Y_hat[Y_hat>0.5] = 1
+        Y_hat[Y_hat>=0.5] = 1
 
     return Y_hat
