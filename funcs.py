@@ -183,15 +183,15 @@ def Load_process(data_path,output_path,group_number):
     sinogram=data['sinogram'][0][0]
     
     parameters=data['parameters'][0][0][0][0]  
+      
+    eff_pixel_size=parameters['effectivePixelSizePost'][0][0]
+    det_width=parameters['geometricMagnification'][0][0]
+    det_count=parameters['numDetectorsPost'][0][0]
 
-    eff_pixel_size=parameters[31][0][0]
-    det_width=parameters[9][0][0]
-    det_count=parameters[32][0][0]
+    angles=parameters['angles'][0]
 
-    angles=parameters[11]
-
-    source_origin=parameters[6][0][0]
-    origin_det=parameters[7][0][0]-source_origin
+    source_origin=parameters['distanceSourceOrigin'][0][0]
+    origin_det=parameters['distanceSourceDetector'][0][0]-source_origin
 
     output_size=512
     deblur_size=128
