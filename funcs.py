@@ -95,6 +95,14 @@ def Deep_Deblur(Input_albedo, group_number, device,img_resolution=128):
     
     return output
 
+def extract(v, t, x_shape):
+    """
+    Extract some coefficients at specified timesteps, then reshape to
+    [batch_size, 1, 1, 1, 1, ...] for broadcasting purposes.
+    """
+    out = torch.gather(v, index=t, dim=0).float()
+    return out.view([t.shape[0]] + [1] * (len(x_shape) - 1))
+
 def DDPM(xt, device, img_size=128):
     '''
     Use network to enhance the result of deblur.
