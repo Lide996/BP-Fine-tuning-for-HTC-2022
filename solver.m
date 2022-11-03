@@ -41,19 +41,23 @@ for num_iter = 1: Num_iter
     Err_data(num_iter) = sum(sum((forward(A,u,num_meas,num_bin)-b).^2));
     Err_hat(num_iter) = sum(sum((u - u_hat).^2));
 end
-u = v;
 %% Boundary
 boundary = get_boundary(u_hat);
-boundary = ext_boundary(boundary);
-change_rate = (u - u_hat) / max(u_hat(:));
+change_rate = (v - u_hat) / max(u_hat(:));
+u = u_hat;
 u(boundary == 1 & change_rate >= change_thresh) = max_u_hat;
 u(boundary == 1 & change_rate <= -change_thresh) = 0;
-
-%% save result
+% boundary = ext_boundary(boundary);
+% u(boundary == 1 & change_rate >= 0.3) = max_u_hat;
+% u(boundary == 1 & change_rate <= -0.3) = 0;
+% boundary = ext_boundary(boundary);
+% u(boundary == 1 & change_rate >= 0.5) = max_u_hat;
+% u(boundary == 1 & change_rate <= -0.5) = 0;
+%%
 u = get_bin(u,0.5);
 cd('./temp')
 save final_result u
 cd ..
-
-% % MCC(get_bin(u_hat,0.5),u_gt)
-% % MCC(get_bin(u,0.5),u_gt)
+% % % load('u_gt.mat')
+% % % MCC(get_bin(u_hat,0.5),u_gt)
+% % % MCC(get_bin(u,0.5),u_gt)

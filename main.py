@@ -2,7 +2,7 @@ import funcs
 import os
 import argparse
 
-
+os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
 parser = argparse.ArgumentParser(description='Limited angle computed tomography')
 
 parser.add_argument('--data_dir', default='./data/',type=str, help='Folder where the input files are located')

@@ -20,8 +20,8 @@ if r_err(1) >= max_r_tol
         r_err(k) =  norm(r_new)/nb;
         if r_err(k) < max_r_tol
             x = x_new;
-            fprintf('CG stops at %d of %d, sufficient decrease = %d, Data_r_err = %.2f%%.\n',...
-                    k, max_iter,Data_r_err(k) >= Data_r_err(k-1), 100*cpt_err(A * x,sub_Sig(:)));
+%             fprintf('CG stops at %d of %d, sufficient decrease = %d, Data_r_err = %.2f%%.\n',...
+%                     k, max_iter,Data_r_err(k) >= Data_r_err(k-1), 100*cpt_err(A * x,sub_Sig(:)));
             break
         end
         rr_new = r_new' * r_new;

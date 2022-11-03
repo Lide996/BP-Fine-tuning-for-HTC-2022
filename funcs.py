@@ -234,18 +234,23 @@ def Load_process(data_path,output_path,group_number):
     
     ##to matlab solver
     io.savemat('./temp/tmp_result.mat',{'u_hat':SR,'CtDataLimited':data},do_compression=True)
-    eng=matlab.engine.start_matlab()
-    eng.solver(nargout=0)
-    final=io.loadmat('./temp/final_result.mat')['u']
+    iter = 1
+    final = np.zeros((iter,512,512))
+    SR = np.zeros((iter,512,512))
+    for i in range(iter):
+        eng=matlab.engine.start_matlab()
+        eng.solver(nargout=0)
+        final[i]=io.loadmat('./temp/final_result.mat')['u']
 
     ##ddpm
-    ddpm=DDPM(final[::4,::4],device)
+        ddpm=DDPM(final[i,::4,::4],device)
     ##super resolution
-    SR=sr.super_resolution(ddpm,device)
+        SR[i]=sr.super_resolution(ddpm,device)
+        io.savemat('./temp/tmp_result.mat',{'u_hat':SR[i],'CtDataLimited':data},do_compression=True)
     ##save results
     pylab.gray()
-    pylab.imsave(output_path,SR)
-    return 
+    pylab.imsave(output_path,SR[i])
+    return ##final,SR
 
 def find_mat(data_list):
     '''
