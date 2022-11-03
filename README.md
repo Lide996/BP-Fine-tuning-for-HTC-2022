@@ -87,7 +87,7 @@ python main.py --group_number 7
 
 | Opening angle |                              BP                              |                             Ours                             |
 | :-----------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|      30°      | <img src="README.assets/image-20221026193249277.png" alt="BP.png" style="zoom:33%;" /> | <img src="README.assets/deblur_ccsocr_ddpm_ta_30.png" alt="ours.png" style="zoom:33%;" /> |
+|      30°      | <img src="README.assets/image-20221026193249277.png" alt="BP.png" style="zoom:33%;" /> | <img src="README.assets/test_data.png" alt="ours.png" style="zoom:33%;" /> |
 
 
 
