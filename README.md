@@ -8,47 +8,57 @@
 
 <font size=2> <sup>2</sup> Department of Mathematical Science, Tsinghua University, Beijing, China </font>
 
-## The limited-angle CT challenge
+## 1. The limited-angle CT challenge
 
 The [Helsinki Tomography Challenge 2022(HTC 2022)](https://www.fips.fi/HTC2022.php) is about limited-angle computational tomography. The main challenge of this image reconstruction problem are as follows
 
-- Due to the extremely limited probing degree, the obtained real-life data inevitably miss the information of the wavefront set of the singular support of the obstacle. This part of theory is completed by Todd Quinto using microlocal analysis since the late 1980s. It shows the incapability of Back-projection method, even if the measurement is dealt with carefully.
+- Due to the extremely limited probing degree, the obtained real-life data inevitably miss the information of the wavefront set of the singular support of the obstacle. This part of theory is completed by Todd Quinto using microlocal analysis since the late 1980s. It shows the incapability of the back-projection method, even if the measurement is dealt with carefully.
 - Due to the ill-posedness induced by the loss of information, measurement error is amplified tremendously in the inversion process, thus suitable regularization technique should be taken. 
 
-## Algorithm Introduction
-Concerning the above challenges, we propose an algorithm which is a combination of back-projection(BP) method and image deblurring network. To meet the requirements of the competition, the proposed algorithm consists of the following steps:
-- **BP**: The measured limited-angle sinogram is first processed by the BP method. In this part, the implement of the BP method is based on astra package.
-- **Deblur**: The reconstruction of the BP method is then passed to a deblurring network to recover the details of the phantom. The code of this network is based on *[Deep Residual Fourier Transformation for Single Image Deblurring](https://github.com/INVOKERer/DeepRFT)*. We modify and train the network to improve the quality of the reconstruction.
-- **Super-resolution**: Our networks are trained with the size of 128\*128. We use super-resolution to upsample the results to 512\*512. The network is based on *[Residual Dense Network for Image Super-Resolution](https://github.com/yulunzhang/RDN)*.
-- **Boundary Refinement**: The output of the previous steps provides an estimation of the target, and is used as part of the prior term. The boundary of the target can be refined by minimizing the data fidelity term and the joint regularization terms of the signal and the object. This idea comes from the paper *[Non-line-of-sight reconstruction with signal–object collaborative regularization](https://www.nature.com/articles/s41377-021-00633-3)*.
-- **Fine-tuning**: The reconstuction is fine tuned by a generative model based on *[Denoising Diffusion Probabilistic Models](https://github.com/INVOKERer/DeepRFT)*. 
-- **Thresholding**: The result is obtained by applying a threshold to the high-resolution image. 
+## 2. A brief introduction of the BRIDE algorithm
 
-## Installation instructions
+Concerning the above challenges, we propose an algorithm which combines the back-projection(BP) method, image deblurring network, image super resolution network and the Bayesian inference method. A brief introduction is provided below and we will discuss the method in detail in the future.
 
-The code uses the following packages:
+- **Step 1: Back projection** 
+
+  > The measured limited-angle sinogram is first processed by the BP method. In this part, the implement of the BP method is based on the `astra` package.
+
+- **Step 2: Deblurring**
+
+  > The reconstruction of the BP method is then passed to a deblurring network to recover the details of the phantom. The code of this network is based on *[Deep Residual Fourier Transformation for Single Image Deblurring](https://github.com/INVOKERer/DeepRFT)*. We modify and train the network to improve the quality of the reconstruction. The reconstruction process can be viewed as the signal processed with the adjoint operator followed by an inverse Gram operator.
+
++ **Step 3: Super resolution**
+
+  > The challenge requires that the output figures be of size 512 $\times$ 512, which poses a challenge on the training of the neural network. To tackle this problem, we train the network using images with 128 $\times$ 128 pixels and apply a super resolution network to obtain figures with 512 $\times$ 512 pixels. This super resolution network is based on *[`Residual Dense Network for Image Super-Resolution`](https://github.com/yulunzhang/RDN)*.
+
+- **Step 4: Boundary Refinement** 
+
+  > We term the output of step 3 the `Intrinsic Deblurring Estimation`. This estimation helps to construct the prior of the final reconstruction. In this last step, the boundary of the target is refined by minimizing a combination of the data fidelity term and the regularization term.
+
+- **Step 5: Fine-tuning**: The reconstuction is fine tuned by a generative model based on *[Denoising Diffusion Probabilistic Models](https://github.com/INVOKERer/DeepRFT)*. 
+
+- **Step 6: Thresholding**: The result is obtained by applying a threshold to the high-resolution image. 
+
+## 3. Installation instructions
+
+### 3.1 Python packages
+
+The code uses the following python packages.
 
 ```
-for python:
 argparse
 astra
 math
-matlab
 numpy
 os
 pylab
 scipy
 skimage
 torch
-
-
-for matlab:
-ASTRA Tomography Toolbox
-HelTomo Toolbox
-Spot Linear-Operator Toolbox
+matlab
 ```
 
-To install these packages(except matlab), run:
+To install these python packages(except matlab), run:
 
 ```
 cd ./installation
@@ -57,27 +67,41 @@ conda env create -f Torch.yaml
 
 To call matlab functions in python, we refer to https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html?requestedDomain=us.
 
-## Usage instructions
+### 3.2 Matlab toolboxes
 
-The pre-trained weights of the networks and part of the training data of HTC 2022 are provided in this repository. To test the algorithm, just run the following code
+The code uses the following matlab toolboxes.
 
 ```
-python main.py --data_dir './data/' --out_dir './output/' --group_number 1
+ASTRA Tomography Toolbox
+HelTomo Toolbox
+Spot Linear-Operator Toolbox
 ```
 
-`--data_dir` : Folder where the input files are located.
+To install these toolboxes for Windows, download the `toolbox.rar` from https://cloud.tsinghua.edu.cn/d/5bd4c08fd94641ce981a/ and unzip it in the main folder.
 
-`--out_dir` : Folder where the output files is stored.
+## 4. Usage instructions
 
-`--group_number` : Group category number.
+To test the algorithm, just run the following code
 
-## Examples
+```python
+python main.py --data_dir './data/' --out_dir './output/' --group_number 7
+```
 
-We list the results of `htc2022_ta_full` here as an example. The test data whose projection angle is limited to [0,30] is provided in the data folder as an example. The result can be easily obtained by running
+`--data_dir` : The folder in which the input files are located.
+
+`--out_dir` : The folder in which the output files are stored.
+
+`--group_number` : Group category number, from 1 to 7.
+
+## 5. An example
+
+Now run the following code
 
 ```
 python main.py --group_number 7
 ```
+
+and check the `output` folder. The reconstruction is `test_data.png`
 
 **Ground truth**:
 
@@ -89,5 +113,21 @@ python main.py --group_number 7
 | :-----------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |      30°      | <img src="README.assets/image-20221026193249277.png" alt="BP.png" style="zoom:33%;" /> | <img src="README.assets/test_data.png" alt="ours.png" style="zoom:33%;" /> |
 
+## tl;dr
+
+Install the python packages.
+
+```
+cd ./installation
+conda env create -f Torch.yaml
+```
+
+Download and unzip `toolbox.rar` from https://cloud.tsinghua.edu.cn/d/5bd4c08fd94641ce981a/.
+
+Run the python code.
+
+```
+python main.py --data_dir './data/' --out_dir './output/' --group_number 7
+```
 
 
